@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Запуск проектов</title>
+<style>
+/*
+  ДИЗАЙН-ТОКЕНЫ (Konnektu AI brandbook: ультрамарин + сигнальный оранжевый)
+  --navy        ультрамарин #392F9E — основной бренд-цвет: хедер, активные вкладки, кнопки "Далее"
+  --navy-soft   #5B50C9 — вторичный акцент: чипы шагов, вторичные кнопки
+  --ice / --ice-soft  светлые лавандовые тинты — фон карточек на светлой теме
+  --accent      сигнальный оранжевый #FF4A1E — CTA, прогресс, правильный ответ, акцент упражнений
+  --bg, --surface, --surface-2   фон страницы / карточек / вложенных блоков
+  --text, --text-muted, --border  типографика и границы
+  --ok, --bad   цвета результата теста/упражнения (верно / неверно)
+  --radius-lg/-md/-sm   масштаб скругления карточка > чип > бейдж
+  --gap-lg/-md/-sm      масштаб отступов между блоками
+  Тема: светлая/тёмная через prefers-color-scheme + [data-theme], везде только через токены.
+*/
+:root{
+  --navy:#392F9E; --navy-soft:#5B50C9; --ice:#D6D2F5; --ice-soft:#EFEDFB;
+  --accent:#FF4A1E; --accent-soft:#FFD9CC;
+  --bg:#F7F6FC; --surface:#FFFFFF; --surface-2:#F1EFFB;
+  --text:#1F2430; --text-muted:#6B7280; --border:#E3E0F5;
+  --ok:#1E8E5A; --ok-soft:#E3F6EC; --bad:#D63A2E; --bad-soft:#FBEAE8;
+  --radius-lg:20px; --radius-md:14px; --radius-sm:9px;
+  --gap-lg:28px; --gap-md:16px; --gap-sm:8px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#161327; --surface:#1E1A35; --surface-2:#262042;
+    --text:#EDEBFA; --text-muted:#A8A3C9; --border:#342D57;
+    --ice:#2A2448; --ice-soft:#241F40; --navy:#8A80F0; --navy-soft:#6F64D9;
+    --accent:#FF6A45; --accent-soft:#3A2420;
+    --ok:#4FD896; --ok-soft:#163327; --bad:#FF6B5E; --bad-soft:#3A1E1C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161327; --surface:#1E1A35; --surface-2:#262042;
+  --text:#EDEBFA; --text-muted:#A8A3C9; --border:#342D57;
+  --ice:#2A2448; --ice-soft:#241F40; --navy:#8A80F0; --navy-soft:#6F64D9;
+  --accent:#FF6A45; --accent-soft:#3A2420;
+  --ok:#4FD896; --ok-soft:#163327; --bad:#FF6B5E; --bad-soft:#3A1E1C;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+#app{max-width:880px; margin:0 auto; padding:0 16px; padding-block:var(--gap-lg) 60px; display:flex; flex-direction:column; gap:var(--gap-lg); min-width:0;}
+
+a{color:var(--navy);}
+
+.brand{display:flex; align-items:baseline; gap:2px; font-weight:800; font-size:13px; letter-spacing:.04em;}
+.brand b{color:var(--text);}
+.brand span{color:var(--accent);}
+
+.hero{display:flex; flex-direction:column; gap:10px;}
+.hero h1{margin:0; font-size:clamp(24px,5vw,34px); font-weight:800; color:var(--navy); text-wrap:balance;}
+.hero p{margin:0; color:var(--text-muted); font-size:15px; max-width:640px;}
+
+.progress-wrap{display:flex; align-items:center; gap:12px;}
+.progress-bar{flex:1; height:10px; border-radius:99px; background:var(--surface-2); overflow:hidden; min-width:0;}
+.progress-fill{height:100%; background:linear-gradient(90deg,var(--navy),var(--accent)); border-radius:99px; transition:width .3s;}
+.progress-label{font-size:13px; color:var(--text-muted); white-space:nowrap; font-variant-numeric:tabular-nums;}
+
+.tabs{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scrollbar-width:thin;}
+.tab{flex:0 0 auto; padding:9px 14px; border-radius:99px; border:1px solid var(--border); background:var(--surface); color:var(--text-muted); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;}
+.tab[aria-selected="true"]{background:var(--navy); color:#fff; border-color:var(--navy);}
+.tab .dot{width:7px; height:7px; border-radius:50%; background:var(--border); flex:none;}
+.tab .dot.done{background:var(--ok);}
+.tab .dot.active-dot{background:var(--accent);}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:clamp(18px,4vw,30px); min-width:0;}
+
+.module-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+.module-head h2{margin:0; font-size:clamp(20px,4vw,26px); color:var(--text); text-wrap:balance;}
+.module-kicker{font-size:12px; font-weight:700; letter-spacing:.06em; color:var(--navy-soft); text-transform:uppercase;}
+.badge{font-size:11px; font-weight:700; padding:4px 10px; border-radius:99px; white-space:nowrap;}
+.badge.pass{background:var(--ok-soft); color:var(--ok);}
+.badge.fail{background:var(--bad-soft); color:var(--bad);}
+.badge.todo{background:var(--surface-2); color:var(--text-muted);}
+
+.m-content{margin-top:var(--gap-md); display:flex; flex-direction:column; gap:14px; font-size:15px; line-height:1.55;}
+.m-content h3{margin:10px 0 2px; font-size:16px; color:var(--navy);}
+.m-content p{margin:0; color:var(--text);}
+.m-content ul{margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px;}
+.callout{background:var(--ice-soft); border-left:3px solid var(--navy); border-radius:var(--radius-sm); padding:12px 14px; font-size:14px;}
+.callout b{color:var(--navy);}
+
+.fact-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px;}
+.fact{background:var(--ice-soft); border-radius:var(--radius-sm); padding:10px 12px;}
+.fact .k{font-weight:700; font-size:13px; color:var(--navy);}
+.fact .v{font-size:12.5px; color:var(--text-muted); margin-top:2px;}
+
+.step-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px;}
+.step{background:var(--surface-2); border-radius:var(--radius-sm); padding:10px 12px; display:flex; gap:10px; align-items:flex-start;}
+.step .code{flex:none; width:34px; height:34px; border-radius:50%; background:var(--navy); color:#fff; font-weight:800; font-size:12.5px; display:flex; align-items:center; justify-content:center;}
+.step.optional .code{background:var(--navy-soft);}
+.step .txt b{display:block; font-size:13px;}
+.step .txt span{font-size:12px; color:var(--text-muted);}
+
+.cmp-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+@media (max-width:560px){.cmp-grid{grid-template-columns:1fr;}}
+.cmp{border-radius:var(--radius-md); padding:14px; color:#fff;}
+.cmp.box{background:var(--navy);}
+.cmp.custom{background:var(--accent);}
+.cmp h4{margin:0 0 8px; font-size:14px;}
+.cmp ul{margin:0; padding-left:18px; font-size:12.5px; line-height:1.5; display:flex; flex-direction:column; gap:4px;}
+
+.tbl-wrap{overflow-x:auto; border-radius:var(--radius-sm); border:1px solid var(--border);}
+table.data{width:100%; border-collapse:collapse; font-size:13px; min-width:420px;}
+table.data th{background:var(--navy); color:#fff; text-align:left; padding:8px 10px; font-weight:600;}
+table.data td{padding:8px 10px; border-bottom:1px solid var(--border); color:var(--text);}
+table.data tr:nth-child(even) td{background:var(--ice-soft);}
+
+.btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+button.btn{font-family:inherit; border:none; border-radius:99px; padding:11px 20px; font-size:14px; font-weight:700; cursor:pointer;}
+button.btn.primary{background:var(--accent); color:#fff;}
+button.btn.secondary{background:var(--surface-2); color:var(--text);}
+button.btn.ghost{background:transparent; color:var(--navy); border:1px solid var(--border);}
+button.btn.small{padding:7px 14px; font-size:12.5px;}
+button.btn:disabled{opacity:.45; cursor:not-allowed;}
+button.btn.primary:hover{filter:brightness(1.05);}
+
+.quiz-q{display:flex; flex-direction:column; gap:10px; padding:14px 0; border-top:1px solid var(--border);}
+.quiz-q:first-of-type{border-top:none; padding-top:0;}
+.quiz-q .qtext{font-weight:700; font-size:14.5px;}
+.opt{display:flex; align-items:flex-start; gap:10px; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; cursor:pointer; font-size:14px; background:var(--surface);}
+.opt input{margin-top:2px; accent-color:var(--navy); flex:none;}
+.opt.correct{border-color:var(--ok); background:var(--ok-soft);}
+.opt.wrong{border-color:var(--bad); background:var(--bad-soft);}
+.opt.disabled{cursor:default;}
+
+.score-box{display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px; border-radius:var(--radius-md); background:var(--surface-2); text-align:center;}
+.score-box .big{font-size:40px; font-weight:800; font-variant-numeric:tabular-nums;}
+.score-box.pass .big{color:var(--ok);}
+.score-box.fail .big{color:var(--bad);}
+
+.note{font-size:12.5px; color:var(--text-muted);}
+.pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:5px 10px; border-radius:99px; background:var(--surface-2); color:var(--text-muted);}
+
+.admin-row{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
+.who{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted);}
+.who .av{width:26px; height:26px; border-radius:50%; background:var(--navy); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
+
+.overview-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px;}
+.mcard{border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; background:var(--surface); cursor:pointer; display:flex; flex-direction:column; gap:8px; min-width:0;}
+.mcard:hover{border-color:var(--navy);}
+.mcard .num{font-size:11px; font-weight:800; color:var(--navy-soft); letter-spacing:.05em;}
+.mcard h4{margin:0; font-size:15px;}
+.mcard p{margin:0; font-size:12.5px; color:var(--text-muted);}
+
+footer.pagefoot{text-align:center; font-size:12px; color:var(--text-muted); padding-top:10px;}
+
+/* ---------------- Exercises (ungraded/self-check practice, separate from the tracked quiz) ---------------- */
+.ex-block{border:1px dashed var(--border); border-radius:var(--radius-md); padding:16px; margin-top:10px; background:var(--surface);}
+.ex-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px;}
+.ex-title{font-weight:800; font-size:13.5px; color:var(--accent); text-transform:uppercase; letter-spacing:.03em;}
+.ex-instr{font-size:13px; color:var(--text-muted); margin:0 0 10px;}
+.ex-result{margin-top:10px; font-size:13px; font-weight:700; padding:8px 12px; border-radius:var(--radius-sm);}
+.ex-result.good{background:var(--ok-soft); color:var(--ok);}
+.ex-result.bad{background:var(--bad-soft); color:var(--bad);}
+
+.seq-pool, .seq-answer{display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:8px; border-radius:var(--radius-sm); background:var(--surface-2);}
+.seq-answer{border:1px dashed var(--border);}
+.seq-chip{background:var(--navy); color:#fff; font-size:12.5px; font-weight:600; padding:8px 12px; border-radius:99px; cursor:pointer; border:none;}
+.seq-chip.placed{background:var(--navy-soft);}
+.seq-chip.ok{background:var(--ok);}
+.seq-chip.bad{background:var(--bad);}
+.seq-label{font-size:11.5px; color:var(--text-muted); margin:10px 0 4px; text-transform:uppercase; letter-spacing:.04em;}
+
+.match-row{display:flex; align-items:center; gap:10px; padding:7px 0; flex-wrap:wrap;}
+.match-row .lbl{flex:1 1 220px; font-size:13.5px; min-width:0;}
+.match-row select{flex:1 1 220px; min-width:0; padding:8px 10px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:13px; font-family:inherit;}
+.match-row.ok select{border-color:var(--ok);}
+.match-row.bad select{border-color:var(--bad);}
+.match-mark{font-size:15px; flex:none; width:18px; text-align:center;}
+
+.choice-card{background:var(--surface-2); border-radius:var(--radius-sm); padding:12px; margin-bottom:10px;}
+.choice-card .ctext{font-size:13.5px; font-weight:600; margin-bottom:8px;}
+.choice-btns{display:flex; gap:8px; flex-wrap:wrap;}
+.choice-btn{border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:99px; cursor:pointer;}
+.choice-btn.ok{background:var(--ok-soft); border-color:var(--ok); color:var(--ok);}
+.choice-btn.bad{background:var(--bad-soft); border-color:var(--bad); color:var(--bad);}
+.choice-fb{font-size:12.5px; color:var(--text-muted); margin-top:8px;}
+
+.ms-opt{display:flex; align-items:flex-start; gap:8px; padding:7px 0; font-size:13.5px; cursor:pointer;}
+.ms-opt input{margin-top:3px; accent-color:var(--navy); flex:none;}
+.ms-opt.ok{color:var(--ok);}
+.ms-opt.bad{color:var(--bad);}
+
+.chk-item{display:flex; align-items:flex-start; gap:8px; padding:6px 0; font-size:13.5px;}
+.chk-item input{margin-top:3px; accent-color:var(--accent); flex:none;}
+
+.idbar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:12px 16px; margin-bottom:16px;}
+.idbar .idlabel{font-size:13px; color:var(--text-muted); flex:none;}
+.idbar input[type=text]{flex:1; min-width:160px; font-family:inherit; font-size:13.5px; padding:8px 12px; border-radius:99px; border:1px solid var(--border); background:var(--surface-2); color:var(--text);}
+.idbar .idsaved{font-size:13.5px; font-weight:700; color:var(--text);}
+.idbar .idsaved span{font-weight:400; color:var(--text-muted);}
+.idbar .idwarn{font-size:12px; color:var(--bad);}
+</style>
+
+<style>html{-webkit-text-size-adjust:100%}body{margin:0;font-size:14px;line-height:1.45}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div id="app">
+  <div class="brand"><b>KONNEKTU</b><span>AI</span></div>
+
+  <div class="hero">
+    <h1>Запуск проектов — курс</h1>
+    <p>Самостоятельное изучение регламента запуска клиентских проектов: 7 модулей, в каждом — учебный материал, практические упражнения на закрепление и короткий тест. Курс дополняет презентацию руководителя и работает без LMS — прямо по ссылке.</p>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-label" id="progressLabel">0 / 7 модулей пройдено</div>
+    </div>
+  </div>
+
+  <div class="idbar" id="idBar"></div>
+
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <div id="main"></div>
+
+  <footer class="pagefoot" id="whoFoot"></footer>
+</div>
+
+<script>
+(function(){
+
+// ---------------------------------------------------------------
+// CONTENT: 7 modules grounded in «Регламент запуска клиентских
+// проектов» (Konnektu AI, финальная версия сент. 2026), презентации
+// руководителя и «Реестре документов Запуск проектов Konnektu».
+// Каждый модуль: учебный материал (html) + практические упражнения
+// (exercises, самопроверка, не отправляются в отчёт) + тест из 5
+// вопросов (quiz, результат сохраняется централизованно).
+// ---------------------------------------------------------------
+var MODULES = [
+{
+  id:"m1", num:1, title:"Жизненный цикл и ключевые термины",
+  blurb:"Что считается «запуском» и где он находится в жизненном цикле проекта",
+  html: '' +
+    '<p>Регламент устанавливает единый порядок запуска клиентских проектов в Konnektu AI: последовательность этапов, состав обязательных документов, роли участников и правила хранения документации. Он распространяется на всех сотрудников, участвующих в запуске и последующем сопровождении проектов клиентов.</p>' +
+    '<h3>Что входит в понятие «запуск проекта»</h3>' +
+    '<p><b>Запуск проекта</b> — это этапы <b>«Подготовка» (A)</b> и <b>«Запуск проекта» (B)</b>, а также первый проход этапа <b>«Планирование цикла» (C)</b>, в рамках которого формируются техническое задание и Fit-Gap первого цикла работ. Результат запуска — согласованный и утверждённый комплект из пяти обязательных документов и готовность проектной группы приступить к первому циклу.</p>' +
+    '<div class="callout"><b>До запуска:</b> проект проходит пресейл (P0–P15) — квалификация лида, диагностика, оценка, коммерческое предложение. На шаге <b>P15</b> результаты пресейла передаются руководителю проекта и становятся входными данными этапа «Подготовка».</div>' +
+    '<div class="callout"><b>После запуска:</b> проект переходит в регулярный операционный режим — ежедневные (D), еженедельные (E) и ежемесячные (F) действия РП, закрытие цикла (G) и возврат к планированию следующего цикла (C).</div>' +
+    '<h3>Ключевые термины</h3>' +
+    '<div class="fact-grid">' +
+      '<div class="fact"><div class="k">РП</div><div class="v">Руководитель проекта — отвечает за поставку результата в рамках объёма, сроков, бюджета и качества</div></div>' +
+      '<div class="fact"><div class="k">АМ / КС</div><div class="v">Аккаунт-менеджер / менеджер клиентского сервиса — коммерческие отношения, договор, удержание клиента</div></div>' +
+      '<div class="fact"><div class="k">ПГ</div><div class="v">Проектная группа — закреплённый перечень сотрудников, работающих над проектом клиента</div></div>' +
+      '<div class="fact"><div class="k">PMO</div><div class="v">Проектный офис — стандарты управления, ревью готовности запуска, контроль качества планов</div></div>' +
+      '<div class="fact"><div class="k">Box / Custom</div><div class="v">Коробочный запуск без доработок / кастомизированный запуск с полным циклом Fit-Gap и ТЗ</div></div>' +
+      '<div class="fact"><div class="k">Fit-Gap</div><div class="v">Анализ соответствия требований штатному функционалу (Fit) и нужных доработок (Gap)</div></div>' +
+      '<div class="fact"><div class="k">Цикл</div><div class="v">Управляемая единица реализации проекта с результатами, границами и критериями завершения</div></div>' +
+    '</div>',
+  exercises:[
+    { type:"sequence", title:"Упражнение · собери жизненный цикл",
+      instr:"Нажимайте на карточки в правильном хронологическом порядке — от первого контакта с клиентом до закрытия проекта.",
+      items:[
+        {id:"presale", label:"Лид и пресейл (P0–P15)"},
+        {id:"a", label:"Подготовка (A)"},
+        {id:"b", label:"Запуск проекта (B)"},
+        {id:"c", label:"Планирование цикла (C)"},
+        {id:"defg", label:"Регулярные циклы (D·E·F·G)"},
+        {id:"hi", label:"Закрытие проекта (H·I)"}
+      ],
+      order:["presale","a","b","c","defg","hi"]
+    }
+  ],
+  quiz:[
+    {q:"Что входит в понятие «Запуск проекта» согласно Регламенту?", opts:["Только этап B. Запуск проекта","Этапы A и B целиком, плюс первый проход этапа C (Планирование цикла)","Все этапы от пресейла до закрытия проекта","Только подготовка договора и Устава"], a:1},
+    {q:"На каком шаге пресейла результаты передаются руководителю проекта?", opts:["P5","P10","P14","P15"], a:3},
+    {q:"Что обозначает аббревиатура ПГ?", opts:["Проектная группа","Производственная группа","Партнёрская группа","Приёмочная группа"], a:0},
+    {q:"Чем отличается коробочный запуск (Box) от кастомизированного (Custom)?", opts:["Box требует полного цикла Fit-Gap, Custom — нет","Box — без кастомизации и доп. разработок, типовой состав задач; Custom — с доработками, включает полный цикл Fit-Gap, ТЗ и оценку трудозатрат","Различий в составе документов нет","Box применяется только для Pharma"], a:1},
+    {q:"Что происходит с проектом после завершения этапа запуска (B)?", opts:["Проект закрывается","Проект возвращается к пресейлу","Проект переходит в этап «Планирование цикла» (C), а затем в регулярный операционный режим D–E–F–G","Проект передаётся напрямую в QA"], a:2}
+  ]
+},
+{
+  id:"m2", num:2, title:"Режимы запуска проекта",
+  blurb:"Box и Custom, и особенности запуска по продуктам CDP, Omni, Pharma",
+  html: '' +
+    '<p>В компании действуют два режима запуска, определяющие состав задач плана и полноту пакета документов.</p>' +
+    '<div class="cmp-grid">' +
+      '<div class="cmp box"><h4>Коробочный (Box)</h4><ul><li>Без кастомизации и доп. разработок</li><li>Типовой состав этапов и документов</li><li>Часть задач плана — необязательные, удаляются</li><li>Минимальный срок запуска</li></ul></div>' +
+      '<div class="cmp custom"><h4>Кастомизированный (Custom)</h4><ul><li>С доработками под бизнес-процессы клиента</li><li>В план добавляются задачи под заказчика</li><li>Уточняется аналитика, добавляются/удаляются блоки</li><li>Требует полного цикла Fit-Gap и ТЗ</li></ul></div>' +
+    '</div>' +
+    '<p>Режим запуска определяет РП совместно с АМ на шагах <b>A3–A4</b> и фиксирует в Уставе проекта. Смена режима в ходе проекта оформляется как <b>запрос на изменение</b> по процедуре управления изменениями Устава.</p>' +
+    '<h3>Особенности по продуктам</h3>' +
+    '<div class="tbl-wrap"><table class="data"><tr><th>Продукт</th><th>Типовые особенности запуска</th></tr>' +
+      '<tr><td>Pharma</td><td>План запуска — около 120 пунктов с автоматической диаграммой Ганта. Обязателен сбор и структурирование <b>27 справочников заказчика</b>. Часть задач опциональна и может быть исключена по решению клиента.</td></tr>' +
+      '<tr><td>CDP</td><td>Стартовый комплект: Паспорт проекта (с Уставом) + план по этапам 0–1–2 + Fit-Gap + ТЗ + Реестр рисков.</td></tr>' +
+      '<tr><td>Omni / Uomni</td><td>Ведётся по отдельному плану запуска; для коробочной поставки без кастомизации — упрощённый состав задач и документов.</td></tr>' +
+    '</table></div>',
+  exercises:[
+    { type:"choice", title:"Упражнение · Box или Custom?",
+      instr:"Прочитайте короткое описание ситуации и выберите режим запуска.",
+      questions:[
+        {text:"Клиент разворачивает готовое решение без доработок; часть задач плана ему не нужна и будет удалена.", options:["Box","Custom"], correct:0, fb:"Типовой состав + удаление необязательных задач — признаки Box."},
+        {text:"Клиенту нужны доработки под его бизнес-процессы, требуется полный цикл Fit-Gap и ТЗ.", options:["Box","Custom"], correct:1, fb:"Полный Fit-Gap и ТЗ требуются только при Custom."},
+        {text:"В план добавляются новые задачи под заказчика, уточняется аналитика, блоки функциональности добавляются и удаляются.", options:["Box","Custom"], correct:1, fb:"Изменение состава плана под заказчика — это Custom."},
+        {text:"Важен минимальный срок запуска, состав документов — типовой, без изменений.", options:["Box","Custom"], correct:0, fb:"Минимальный срок и типовой состав — характеристики Box."}
+      ]
+    }
+  ],
+  quiz:[
+    {q:"Кто определяет режим запуска проекта и когда?", opts:["Только клиент, на этапе подписания договора","РП совместно с АМ на шагах A3–A4, фиксируется в Уставе","PMO на шаге B9","QA на этапе тестирования"], a:1},
+    {q:"Сколько справочников заказчика необходимо собрать и структурировать для проектов Pharma?", opts:["13","27","120","5"], a:1},
+    {q:"Как оформляется смена режима запуска в ходе проекта?", opts:["Устным согласованием с клиентом","Как запрос на изменение по процедуре управления изменениями Устава","Повторным проведением этапа A","Сменить режим запуска нельзя"], a:1},
+    {q:"Что входит в стартовый комплект документов для проекта CDP?", opts:["Только Устав и План","Паспорт проекта (с Уставом) + план по этапам 0–1–2 + Fit-Gap + ТЗ + Реестр рисков","27 справочников заказчика","Договорные документы и SLA"], a:1},
+    {q:"Какая особенность у типового плана запуска Pharma?", opts:["План не содержит диаграммы Ганта","Около 120 пунктов плана с автоматической диаграммой Ганта; часть задач опциональна","План применяется только при кастомизированном запуске","План не требует согласования с клиентом"], a:1}
+  ]
+},
+{
+  id:"m3", num:3, title:"Этап A. Подготовка проекта",
+  blurb:"8 шагов от назначения РП до старта работ",
+  html: '' +
+    '<p>Цель этапа — назначить руководителя проекта, оформить договорные отношения и подготовить проект к формальному запуску. Этап начинается сразу после согласования клиентом коммерческого предложения (шаг P14 пресейла) и завершается согласованием клиентом старта работ (A8).</p>' +
+    '<div class="step-grid">' +
+      '<div class="step"><div class="code">A1</div><div class="txt"><b>Назначение РП</b><span>PMO / руководитель проектного направления</span></div></div>' +
+      '<div class="step"><div class="code">A2</div><div class="txt"><b>Изучение материалов пресейла</b><span>РП</span></div></div>' +
+      '<div class="step"><div class="code">A3</div><div class="txt"><b>Обсуждение договорных вопросов</b><span>РП / АМ</span></div></div>' +
+      '<div class="step"><div class="code">A4</div><div class="txt"><b>Подготовка договора</b><span>АМ / РП / юрист</span></div></div>' +
+      '<div class="step"><div class="code">A5</div><div class="txt"><b>Декомпозиция на циклы</b><span>РП</span></div></div>' +
+      '<div class="step optional"><div class="code">A6*</div><div class="txt"><b>Спецификация (при необходимости)</b><span>РП / аналитик</span></div></div>' +
+      '<div class="step"><div class="code">A7</div><div class="txt"><b>Согласование договора</b><span>АМ / РП / юрист / клиент</span></div></div>' +
+      '<div class="step"><div class="code">A8</div><div class="txt"><b>Акцепт клиента на старт работ</b><span>Клиент / АМ / РП</span></div></div>' +
+    '</div>' +
+    '<p class="note">* — шаг A6 опциональный: только для договоров, предусматривающих спецификации.</p>',
+  exercises:[
+    { type:"match", title:"Упражнение · кто отвечает за шаг этапа A",
+      instr:"Для каждого шага выберите ответственного из списка и нажмите «Проверить».",
+      rows:[
+        {id:"A1", label:"A1 — Назначение руководителя проекта"},
+        {id:"A2", label:"A2 — Изучение материалов пресейла"},
+        {id:"A3", label:"A3 — Обсуждение договорных вопросов"},
+        {id:"A4", label:"A4 — Подготовка договора"},
+        {id:"A5", label:"A5 — Декомпозиция на циклы"},
+        {id:"A6", label:"A6* — Подготовка спецификации"},
+        {id:"A7", label:"A7 — Согласование договора"},
+        {id:"A8", label:"A8 — Акцепт клиента на старт работ"}
+      ],
+      options:["PMO / руководитель проектного направления","РП","РП / АМ","АМ / РП / юрист","РП / аналитик","АМ / РП / юрист / клиент","Клиент / АМ / РП"],
+      correct:{A1:"PMO / руководитель проектного направления", A2:"РП", A3:"РП / АМ", A4:"АМ / РП / юрист", A5:"РП", A6:"РП / аналитик", A7:"АМ / РП / юрист / клиент", A8:"Клиент / АМ / РП"}
+    }
+  ],
+  quiz:[
+    {q:"Чем завершается этап A?", opts:["Открытием Реестра рисков","Акцептом (согласованием) клиента на старт работ — шаг A8","Ревью с PMO","Созданием проекта в Jira"], a:1},
+    {q:"Кто отвечает за шаг A1 — назначение руководителя проекта (по Регламенту)?", opts:["РП самостоятельно","PMO / руководитель проектного направления","Аккаунт-менеджер","Клиент"], a:1},
+    {q:"Какой шаг этапа A является опциональным?", opts:["A4 — подготовка договора","A5 — декомпозиция на циклы","A6 — подготовка спецификации работ","A8 — акцепт клиента"], a:2},
+    {q:"Кто участвует в согласовании договора и приложений на шаге A7?", opts:["Только РП","АМ, РП, юрист и клиент","Только клиент и PMO","Только юридический отдел"], a:1},
+    {q:"Что делает РП на шаге A2?", opts:["Создаёт проект в Б24","Изучает материалы пресейла: решения, обязательства, оценки, риски и договорённости с клиентом","Проводит ревью с PMO","Формирует реестр рисков"], a:1}
+  ]
+},
+{
+  id:"m4", num:4, title:"Этап B. Запуск проекта",
+  blurb:"10 шагов от создания проекта в системах до старта цикла",
+  html: '' +
+    '<p>Цель этапа — формально инициировать проект в учётных системах компании, собрать команду и подготовить утверждённый комплект из пяти обязательных документов. Этап завершается ревью готовности с PMO и открытием первого цикла работ.</p>' +
+    '<div class="step-grid">' +
+      '<div class="step"><div class="code">B1</div><div class="txt"><b>Создание проекта в Б24</b><span>РП</span></div></div>' +
+      '<div class="step"><div class="code">B2</div><div class="txt"><b>Создание проекта в Jira</b><span>РП</span></div></div>' +
+      '<div class="step"><div class="code">B3</div><div class="txt"><b>Назначение ключевых членов команды</b><span>РП / ресурсные руководители</span></div></div>' +
+      '<div class="step"><div class="code">B4</div><div class="txt"><b>Стартовые встречи</b><span>РП</span></div></div>' +
+      '<div class="step"><div class="code">B5</div><div class="txt"><b>Согласование целей проекта</b><span>РП / клиент / команда</span></div></div>' +
+      '<div class="step"><div class="code">B6</div><div class="txt"><b>Устав проекта (согласование)</b><span>РП / команда / клиент</span></div></div>' +
+      '<div class="step"><div class="code">B7</div><div class="txt"><b>Реестр рисков (старт ведения)</b><span>РП / команда</span></div></div>' +
+      '<div class="step"><div class="code">B8</div><div class="txt"><b>Базовый план проекта</b><span>РП / команда / клиент</span></div></div>' +
+      '<div class="step"><div class="code">B9</div><div class="txt"><b>Ревью запуска с PMO</b><span>РП / PMO</span></div></div>' +
+      '<div class="step"><div class="code">B10</div><div class="txt"><b>Управленческий акт, старт цикла</b><span>РП</span></div></div>' +
+    '</div>' +
+    '<h3>Обязанности участников</h3>' +
+    '<ul><li>Все документы проекта размещаются в общем доступе проектной группы в Битрикс — не в личных папках сотрудников.</li><li>РП и КС обеспечивают наличие всех пяти обязательных документов запуска до начала регулярных работ (перехода к этапу C).</li><li>PMO на шаге B9 проверяет полноту плана и комплекта документов, в особенности для проектов Pharma.</li></ul>',
+  exercises:[
+    { type:"match", title:"Упражнение · кто отвечает за шаг этапа B",
+      instr:"Сопоставьте шаги B1–B10 с ответственными и нажмите «Проверить».",
+      rows:[
+        {id:"B1", label:"B1 — Создание проекта в Б24"},
+        {id:"B2", label:"B2 — Создание проекта в Jira"},
+        {id:"B3", label:"B3 — Назначение ключевых членов команды"},
+        {id:"B4", label:"B4 — Стартовые встречи"},
+        {id:"B5", label:"B5 — Согласование целей проекта"},
+        {id:"B6", label:"B6 — Устав проекта"},
+        {id:"B7", label:"B7 — Реестр рисков"},
+        {id:"B8", label:"B8 — Базовый план проекта"},
+        {id:"B9", label:"B9 — Ревью запуска с PMO"},
+        {id:"B10", label:"B10 — Управленческий акт, старт цикла"}
+      ],
+      options:["РП","РП / ресурсные руководители","РП / клиент / команда","РП / команда / клиент","РП / команда","РП / PMO"],
+      correct:{B1:"РП", B2:"РП", B3:"РП / ресурсные руководители", B4:"РП", B5:"РП / клиент / команда", B6:"РП / команда / клиент", B7:"РП / команда", B8:"РП / команда / клиент", B9:"РП / PMO", B10:"РП"}
+    }
+  ],
+  quiz:[
+    {q:"Чем завершается этап B?", opts:["Подготовкой договора","Управленческим актом и стартом цикла (B10), после ревью с PMO (B9)","Назначением РП","Подписанием протокола тестирования"], a:1},
+    {q:"На каком шаге открывается Реестр рисков?", opts:["B3","B5","B7","B9"], a:2},
+    {q:"Что проверяет PMO на шаге B9 (Project Kick-off Review)?", opts:["Только договор","Готовность запуска: полноту плана и комплекта документов, особенно для Pharma","Только реестр рисков","Загрузку сотрудников"], a:1},
+    {q:"Где должны размещаться все документы проекта согласно обязанностям участников этапа B?", opts:["В личных папках сотрудников","В общем доступе проектной группы в Битрикс","На локальном компьютере РП","В Jira"], a:1},
+    {q:"Какой шаг включает формулирование измеримых целей проекта и критериев успеха?", opts:["B4","B5","B6","B8"], a:1}
+  ]
+},
+{
+  id:"m5", num:5, title:"Пять обязательных документов запуска",
+  blurb:"ТЗ → Fit-Gap → План → Реестр рисков, и рамочный Устав проекта",
+  html: '' +
+    '<p>По итогам рабочей встречи по процессам запуска утверждён минимальный обязательный набор документов, без которого проект не считается формально запущенным. Документы формируются последовательно и логически связаны.</p>' +
+    '<div class="step-grid">' +
+      '<div class="step"><div class="code">1</div><div class="txt"><b>Техническое задание</b><span>источник требований</span></div></div>' +
+      '<div class="step"><div class="code">2</div><div class="txt"><b>Fit-Gap + оценка трудозатрат</b><span>способ реализации</span></div></div>' +
+      '<div class="step"><div class="code">3</div><div class="txt"><b>План запуска</b><span>сроки и ответственные</span></div></div>' +
+      '<div class="step"><div class="code">4</div><div class="txt"><b>Реестр рисков</b><span>контроль исполнения</span></div></div>' +
+    '</div>' +
+    '<div class="callout"><b>Устав / Паспорт проекта</b> — рамочный документ, готовится параллельно (шаг B6) и объединяет цели, роли, ограничения и критерии приёмки, ссылаясь на остальные документы комплекта.</div>' +
+    '<div class="callout"><b>Ключевое правило:</b> без Fit-Gap остальные документы теряют привязку к согласованным требованиям.</div>' +
+    '<h3>Обязательность документов по продуктам</h3>' +
+    '<div class="tbl-wrap"><table class="data"><tr><th>Документ</th><th>CDP</th><th>Omni</th><th>Pharma</th></tr>' +
+      '<tr><td>Устав проекта</td><td>✓</td><td>✓</td><td>✓</td></tr>' +
+      '<tr><td>Техническое задание</td><td>✓</td><td>—</td><td>✓</td></tr>' +
+      '<tr><td>Fit-Gap + оценка трудозатрат</td><td>✓</td><td>✓</td><td>✓</td></tr>' +
+      '<tr><td>План запуска (с Гантом)</td><td>✓</td><td>✓</td><td>✓</td></tr>' +
+      '<tr><td>Реестр рисков</td><td>✓</td><td>✓</td><td>✓</td></tr>' +
+    '</table></div>' +
+    '<ul><li>Обязательное поле <b>«Ответственный»</b> в плане запуска — устраняет отсутствие матрицы ответственности.</li><li>Реестр рисков: активные риски пересматриваются не реже одного раза в <b>две недели</b>.</li></ul>',
+  exercises:[
+    { type:"sequence", title:"Упражнение · собери цепочку документов",
+      instr:"Соберите логическую цепочку формирования документов — от источника требований до контроля исполнения.",
+      items:[
+        {id:"tz", label:"Техническое задание"},
+        {id:"fg", label:"Fit-Gap + оценка"},
+        {id:"plan", label:"План запуска"},
+        {id:"risk", label:"Реестр рисков"}
+      ],
+      order:["tz","fg","plan","risk"]
+    },
+    { type:"multiselect", title:"Упражнение · какие документы обязательны для Omni",
+      instr:"Отметьте все документы, обязательные для продукта Omni, и нажмите «Проверить».",
+      options:[
+        {id:"ustav", label:"Устав проекта", correct:true},
+        {id:"tz", label:"Техническое задание", correct:false},
+        {id:"fg", label:"Fit-Gap + оценка трудозатрат", correct:true},
+        {id:"plan", label:"План запуска", correct:true},
+        {id:"risk", label:"Реестр рисков", correct:true}
+      ]
+    }
+  ],
+  quiz:[
+    {q:"Сколько обязательных документов запуска утверждено Регламентом?", opts:["3","5","7","9"], a:1},
+    {q:"Для какого продукта техническое задание (ТЗ) не является обязательным документом?", opts:["CDP","Pharma","Omni","Для всех обязательно"], a:2},
+    {q:"Какое ключевое правило зафиксировано в отношении Fit-Gap?", opts:["Fit-Gap готовится после плана запуска","Без Fit-Gap остальные документы теряют привязку к согласованным требованиям","Fit-Gap не нужен при коробочном запуске","Fit-Gap готовит только клиент"], a:1},
+    {q:"Какое обязательное поле введено в план запуска для устранения проблемы отсутствия матрицы ответственности?", opts:["«Статус»","«Дата начала»","«Ответственный»","«Приоритет»"], a:2},
+    {q:"Как часто пересматриваются активные риски в Реестре рисков?", opts:["Ежедневно","Не реже одного раза в две недели","Один раз в квартал","Только при закрытии проекта"], a:1}
+  ]
+},
+{
+  id:"m6", num:6, title:"Роли, хранение и контроль качества",
+  blurb:"Кто за что отвечает, где хранить документы и как проверяется готовность",
+  html: '' +
+    '<h3>Разграничение ролей АМ и РП</h3>' +
+    '<p>Главный вопрос АМ — «что нужно клиенту и на каких условиях мы это обеспечиваем»; главный вопрос РП — «как команда выполнит обязательства и сдаст результат». Правило единого владельца: по каждому вопросу — одна ведущая роль, вторая участвует в согласовании.</p>' +
+    '<div class="tbl-wrap"><table class="data"><tr><th>Ситуация</th><th>Правило взаимодействия</th></tr>' +
+      '<tr><td>Обещания клиенту</td><td>АМ не фиксирует срок, объём или цену без подтверждения РП; РП не меняет коммерческие условия без согласования АМ.</td></tr>' +
+      '<tr><td>Запрос на изменение</td><td>РП формирует содержание и оценку влияния; АМ согласует цену и договорное оформление.</td></tr>' +
+      '<tr><td>Сдача этапа</td><td>РП подтверждает готовность и документы; АМ обеспечивает подписание и оплату.</td></tr>' +
+      '<tr><td>Эскалация</td><td>РП даёт факты и варианты решения; АМ ведёт коммуникацию по договору, деньгам, отношениям.</td></tr>' +
+    '</table></div>' +
+    '<h3>Хранение и версионирование</h3>' +
+    '<ul><li>Все документы — в общей папке проектной группы в Битрикс; личные папки не допускаются.</li><li>Версия отражается в имени файла: «Название_вер_номер».</li><li>Протоколы и рабочие документы — согласование в течение <b>1 рабочего дня</b>; проектные решения и техническая документация — в течение <b>5 рабочих дней</b>.</li></ul>' +
+    '<h3>Контроль качества запуска</h3>' +
+    '<p>На шаге B9 РП представляет PMO комплект документов запуска. Для проверки готовности решения используется Тест-план и <b>Протокол тестирования</b>, который подписывается руководителем проекта и уполномоченным представителем заказчика.</p>' +
+    '<h3>Типовые риски и меры</h3>' +
+    '<div class="tbl-wrap"><table class="data"><tr><th>Проблема</th><th>Мера, устраняющая проблему</th></tr>' +
+      '<tr><td>Документы «у себя на компьютере»</td><td>Обязательное размещение всех документов в общей папке ПГ в Битрикс.</td></tr>' +
+      '<tr><td>Отсутствие матрицы ответственности</td><td>Поле «Ответственный» включено как обязательное в шаблон плана.</td></tr>' +
+      '<tr><td>Реестр рисков не ведётся</td><td>Открытие реестра закреплено как шаг B7 и проверяется на ревью B9.</td></tr>' +
+    '</table></div>' +
+    '<div class="callout"><b>Запуск считается завершённым, когда:</b> все 5 документов согласованы и размещены; проведено ревью с PMO без критических замечаний; назначены ответственные по всем задачам плана; открыт и заполнен реестр рисков.</div>',
+  exercises:[
+    { type:"match", title:"Упражнение · АМ или РП — чьё правило?",
+      instr:"Сопоставьте рабочую ситуацию с правилом взаимодействия АМ и РП.",
+      rows:[
+        {id:"s1", label:"Клиент в переписке с АМ просит зафиксировать срок поставки на 2 недели раньше плана"},
+        {id:"s2", label:"Клиент хочет добавить новый функциональный блок, которого не было в Fit-Gap"},
+        {id:"s3", label:"Команда закончила этап, нужно получить подпись клиента и закрыть оплату"},
+        {id:"s4", label:"В проекте конфликт из-за сорванного срока, клиент недоволен и грозит расторжением"}
+      ],
+      options:[
+        "АМ не фиксирует срок/цену без подтверждения РП; РП не меняет условия без согласования АМ",
+        "РП формирует содержание и оценку влияния; АМ согласует цену и договор",
+        "РП подтверждает готовность и документы; АМ обеспечивает подписание и оплату",
+        "РП даёт факты и варианты решения; АМ ведёт коммуникацию по договору/деньгам/репутации"
+      ],
+      correct:{
+        s1:"АМ не фиксирует срок/цену без подтверждения РП; РП не меняет условия без согласования АМ",
+        s2:"РП формирует содержание и оценку влияния; АМ согласует цену и договор",
+        s3:"РП подтверждает готовность и документы; АМ обеспечивает подписание и оплату",
+        s4:"РП даёт факты и варианты решения; АМ ведёт коммуникацию по договору/деньгам/репутации"
+      }
+    },
+    { type:"match", title:"Упражнение · сроки согласования документов",
+      instr:"Сопоставьте тип документа со сроком согласования.",
+      rows:[
+        {id:"d1", label:"Протоколы и рабочие документы"},
+        {id:"d2", label:"Проектные решения и техническая документация"}
+      ],
+      options:["1 рабочий день","5 рабочих дней"],
+      correct:{d1:"1 рабочий день", d2:"5 рабочих дней"}
+    }
+  ],
+  quiz:[
+    {q:"Кто подписывает Протокол тестирования?", opts:["Только РП","Руководитель проекта и уполномоченный представитель заказчика","Только QA","Только PMO"], a:1},
+    {q:"В течение какого срока согласуются протоколы и рабочие документы (если не установлен иной срок)?", opts:["1 рабочего дня","3 рабочих дней","5 рабочих дней","10 рабочих дней"], a:0},
+    {q:"Какое правило определяет взаимодействие АМ и РП по обещаниям клиенту?", opts:["АМ фиксирует срок и цену самостоятельно","АМ не фиксирует срок, объём или цену без подтверждения РП; РП не меняет коммерческие условия без согласования АМ","РП полностью заменяет функции АМ","Решения принимает только клиент"], a:1},
+    {q:"Какая системная проблема устраняется обязательным размещением документов в общей папке ПГ в Битрикс?", opts:["Отсутствие матрицы ответственности","Документы «у себя на компьютере»","Реестр рисков не ведётся","Отсутствие тест-плана"], a:1},
+    {q:"Когда запуск проекта считается завершённым?", opts:["Сразу после подписания договора","После создания проекта в Jira","Когда согласованы все 5 документов, проведено ревью с PMO без критических замечаний, назначены ответственные по всем задачам, открыт реестр рисков","После первой встречи с клиентом"], a:2}
+  ]
+},
+{
+  id:"m7", num:7, title:"Реестр документов: где искать материалы",
+  blurb:"Структура Реестра документов «Запуск проектов Konnektu» и шаблоны",
+  html: '' +
+    '<p>Весь комплект материалов по запуску — регламент, реестр документов и шаблоны — хранится в одном месте, а не «у кого-то на компьютере».</p>' +
+    '<div class="callout"><b>Путь хранения:</b> Общий диск → <b>БАЗА ЗНАНИЙ ДЛЯ СОТРУДНИКОВ KONNEKTU</b> → Регламенты. Там же лежит сам Регламент и Реестр документов «Запуск проектов Konnektu» (Приложение 1).</div>' +
+    '<h3>Три источника, которые дают полную картину</h3>' +
+    '<div class="fact-grid">' +
+      '<div class="fact"><div class="k">Регламент запуска</div><div class="v">Полный текст процесса, роли, обязательные документы и приложение с реестром шаблонов</div></div>' +
+      '<div class="fact"><div class="k">Реестр документов</div><div class="v">Таблица всех документов по CDP / Omni / Pharma с ответственным отделом и порядком согласования</div></div>' +
+      '<div class="fact"><div class="k">Папка ПГ в Битрикс</div><div class="v">Место хранения документов конкретного проекта — создаётся на шагах B1–B2</div></div>' +
+    '</div>' +
+    '<h3>Структура Реестра документов (69 файлов)</h3>' +
+    '<div class="step-grid">' +
+      '<div class="step"><div class="code">1</div><div class="txt"><b>Общая информация</b><span>распределение обязанностей АМ/РП, схема процессов</span></div></div>' +
+      '<div class="step"><div class="code">2</div><div class="txt"><b>Артефакты для всех типов проекта</b><span>тест-кейсы, протокол тестирования, Устав, Fit-Gap, реестр рисков</span></div></div>' +
+      '<div class="step"><div class="code">3</div><div class="txt"><b>Технические требования и настройки</b><span>способы аутентификации в решении Konnektu</span></div></div>' +
+      '<div class="step"><div class="code">4</div><div class="txt"><b>Запуск CDP</b><span>опросник, паспорт проекта, ТЗ, план, реестр рисков, Fit-Gap</span></div></div>' +
+      '<div class="step"><div class="code">5</div><div class="txt"><b>Запуск Omni</b><span>бриф, инструкция Email/SMS, план, реестр рисков</span></div></div>' +
+      '<div class="step"><div class="code">6</div><div class="txt"><b>Запуск Фармы</b><span>договор и SLA, инструкции, 27 справочников, ТЗ, план с Гантом</span></div></div>' +
+      '<div class="step"><div class="code">7</div><div class="txt"><b>Чек-листы Фарма</b><span>проверка Web / iOS / Android</span></div></div>' +
+    '</div>' +
+    '<h3>Шаблоны обязательных документов (Приложение 2)</h3>' +
+    '<ul><li>ALL_Устав.docx · ALL_Шаблон_FIT_GAP (классика).xlsx · ALL_Реестр_рисков.xlsx</li><li>ALL_Тест_план.xlsx · ALL_Протокол_тестирования.docx · ALL_Пример_тест_кейсов_Abbott_Elma.docx</li><li>ALL_Распределение_обязанностей_Аккаунт_менеджер_и_Руководитель_проекта.docx · ALL_Схема_проектов_Konnektu_AI.pptx</li></ul>' +
+    '<div class="callout"><b>Обратите внимание:</b> большинство документов, которые передаются заказчику или требуют его подписи, согласуются «Konnektu AI + Клиент» (например, Устав, Fit-Gap, Протокол тестирования); внутренние рабочие шаблоны (например, пример тест-кейсов, схема процессов) согласуются только внутри Konnektu AI.</div>',
+  exercises:[
+    { type:"choice", title:"Упражнение · в каком разделе реестра искать документ",
+      instr:"Для каждого документа выберите правильный раздел Реестра.",
+      questions:[
+        {text:"ALL_Протокол_тестирования.docx", options:["Артефакты для всех типов проекта","Запуск Omni","Технические требования"], correct:0, fb:"Протокол тестирования входит в общий комплект QA-документов для всех типов проектов."},
+        {text:"OMNI_Бриф_KonnektU_Uomni.xlsx", options:["Запуск CDP","Запуск Omni","Чек-листы Фарма"], correct:1, fb:"Файл с префиксом OMNI_ лежит в разделе «Запуск Omni»."},
+        {text:"01_Роли_и_доступы.xlsx", options:["Общая информация","Запуск Фармы (Справочники)","Технические требования"], correct:1, fb:"Нумерованные справочники 00–27 — часть раздела «Запуск Фармы»."},
+        {text:"ALL_Описание_способов_аутентификации_в_решении_Konnektu.docx", options:["Технические требования и настройки","Запуск CDP","Общая информация"], correct:0, fb:"Авторизация/аутентификация — техническая настройка решения, общая для всех продуктов."}
+      ]
+    },
+    { type:"checklist", title:"Личная самопроверка · чек-лист для вашего следующего запуска",
+      instr:"Отметьте, что уже сделано на вашем текущем проекте. Это личная самопроверка — результат никуда не отправляется и не влияет на отчёт.",
+      items:[
+        "Создана общая папка проекта в Битрикс, туда перенесены все текущие файлы",
+        "Скачаны актуальные шаблоны из Реестра документов запуска (Приложение 1 Регламента)",
+        "В плане запуска заполнена колонка «Ответственный» по каждой задаче",
+        "Реестр рисков открыт не позднее шага B7 «Запуска проекта»",
+        "Ревью готовности запуска с PMO запланировано до старта регулярных работ"
+      ]
+    }
+  ],
+  quiz:[
+    {q:"Где хранится весь комплект документов запуска (регламент, реестр, шаблоны)?", opts:["В личных папках РП","Общий диск → База знаний для сотрудников Konnektu → Регламенты","Только в Jira","Только на Google Диске"], a:1},
+    {q:"Сколько документов входит в общий Реестр документов запуска проектов Konnektu?", opts:["27","45","69","120"], a:2},
+    {q:"В какой раздел реестра входят договор, SLA и прочие юридические документы для Pharma?", opts:["Артефакты для всех типов проекта","Технические требования и настройки","Запуск Фармы (Договор и приложения)","Общая информация"], a:2},
+    {q:"Какой документ из Приложения 2 содержит полную матрицу ответственности АМ и РП по 13 процессам?", opts:["ALL_Устав.docx","ALL_Распределение_обязанностей_Аккаунт_менеджер_и_Руководитель_проекта.docx","ALL_Тест_план.xlsx","ALL_Схема_проектов_Konnektu_AI.pptx"], a:1},
+    {q:"Какие три источника вместе дают полную картину по запуску проекта?", opts:["Только Регламент","Регламент, Реестр документов и папка ПГ в Битрикс","Только презентация руководителя","Только папка ПГ"], a:1}
+  ]
+}
+];
+var PASS_RATIO = 0.8; // 4 из 5
+
+// ---------------------------------------------------------------
+// STATE
+// ---------------------------------------------------------------
+var state = {
+  view: "overview",      // overview | module
+  moduleIdx: 0,
+  showQuiz: false,
+  results: {},            // moduleId -> {score,total,passed,ts}
+  userName: "",
+  userId: "",
+  saveWarning: ""
+};
+
+// Веб-приложение Google Apps Script, привязанное к Google-таблице
+// "Запуск проектов — результаты". См. инструкцию по развёртыванию,
+// переданную вместе с файлом курса.
+var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzN3lUUx4aQ94sc1bluJyc3btCkbpG1LPq9MBI7r0pr72Qsus0IK7pVPMB9G2-jJA/exec";
+
+// ---------------------------------------------------------------
+// RENDER HELPERS
+// ---------------------------------------------------------------
+function el(html){ var d=document.createElement("div"); d.innerHTML=html; return d.firstElementChild; }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+function shuffle(arr){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+function passedCount(){
+  var n=0; MODULES.forEach(function(m){ if(state.results[m.id] && state.results[m.id].passed) n++; });
+  return n;
+}
+
+function renderProgress(){
+  var n = passedCount(), total = MODULES.length;
+  document.getElementById("progressFill").style.width = (100*n/total)+"%";
+  document.getElementById("progressLabel").textContent = n+" / "+total+" модулей пройдено";
+}
+
+function renderTabs(){
+  var wrap = document.getElementById("tabs");
+  wrap.innerHTML = "";
+  var overviewTab = el('<button class="tab" role="tab">Обзор курса</button>');
+  overviewTab.setAttribute("aria-selected", state.view==="overview" ? "true":"false");
+  overviewTab.onclick = function(){ state.view="overview"; render(); };
+  wrap.appendChild(overviewTab);
+
+  MODULES.forEach(function(m, i){
+    var r = state.results[m.id];
+    var dotClass = r ? (r.passed ? "done" : "") : "";
+    var isActive = state.view==="module" && state.moduleIdx===i;
+    var btn = el('<button class="tab" role="tab"><span class="dot '+dotClass+(isActive?" active-dot":"")+'"></span>'+(i+1)+'. '+esc(m.title.split(" ").slice(0,2).join(" "))+'</button>');
+    btn.setAttribute("aria-selected", isActive ? "true":"false");
+    btn.onclick = function(){ state.view="module"; state.moduleIdx=i; state.showQuiz=false; render(); };
+    wrap.appendChild(btn);
+  });
+}
+
+function renderOverview(){
+  var cards = MODULES.map(function(m,i){
+    var r = state.results[m.id];
+    var badge = r ? (r.passed ? '<span class="badge pass">пройден · '+r.score+'/'+r.total+'</span>' : '<span class="badge fail">не сдан · '+r.score+'/'+r.total+'</span>') : '<span class="badge todo">не начат</span>';
+    var c = el('<div class="mcard"><div class="num">МОДУЛЬ '+(i+1)+'</div><h4>'+esc(m.title)+'</h4><p>'+esc(m.blurb)+'</p>'+badge+'</div>');
+    c.onclick = function(){ state.view="module"; state.moduleIdx=i; state.showQuiz=false; render(); };
+    return c;
+  });
+  var container = el('<div class="card"><h2 style="margin:0 0 4px;">'+MODULES.length+' модулей курса</h2><p class="note" style="margin-bottom:14px;">Изучите материал модуля, закрепите упражнениями, затем пройдите тест (нужно 4 правильных ответа из 5). В отчёт попадает только результат теста.</p><div class="overview-grid"></div></div>');
+  var grid = container.querySelector(".overview-grid");
+  cards.forEach(function(c){ grid.appendChild(c); });
+  return container;
+}
+
+function renderModule(){
+  var m = MODULES[state.moduleIdx];
+  var r = state.results[m.id];
+  var badge = r ? (r.passed ? '<span class="badge pass">пройден · '+r.score+'/'+r.total+'</span>' : '<span class="badge fail">не сдан · '+r.score+'/'+r.total+'</span>') : '<span class="badge todo">тест не пройден</span>';
+  var card = el('<div class="card">'+
+    '<div class="module-head"><div><div class="module-kicker">Модуль '+m.num+' из '+MODULES.length+'</div><h2>'+esc(m.title)+'</h2></div><span id="moduleBadge">'+badge+'</span></div>'+
+    '<div class="m-content">'+m.html+'</div>'+
+    '<div id="exArea"></div>'+
+    '<div class="btnrow" id="moduleActions"></div>'+
+    '<div id="quizArea" style="margin-top:18px;"></div>'+
+  '</div>');
+
+  var exArea = card.querySelector("#exArea");
+  (m.exercises||[]).forEach(function(ex){ exArea.appendChild(renderExercise(ex)); });
+
+  var actions = card.querySelector("#moduleActions");
+  var quizBtn = el('<button class="btn primary">Пройти тест модуля ('+m.quiz.length+' вопросов)</button>');
+  quizBtn.onclick = function(){ state.showQuiz=true; render(); };
+  actions.appendChild(quizBtn);
+
+  if(state.moduleIdx>0){
+    var prev = el('<button class="btn ghost">← Предыдущий модуль</button>');
+    prev.onclick=function(){ state.moduleIdx--; state.showQuiz=false; render(); };
+    actions.appendChild(prev);
+  }
+  if(state.moduleIdx<MODULES.length-1){
+    var next = el('<button class="btn secondary">Следующий модуль →</button>');
+    next.onclick=function(){ state.moduleIdx++; state.showQuiz=false; render(); };
+    actions.appendChild(next);
+  }
+
+  if(state.showQuiz){
+    card.querySelector("#quizArea").appendChild(buildQuizDom(m));
+  }
+  return card;
+}
+
+// ---------------------------------------------------------------
+// EXERCISES (self-check practice — never sent to the backend)
+// ---------------------------------------------------------------
+function exShell(title, instr){
+  return el('<div class="ex-block"><div class="ex-head"><span class="ex-title">'+esc(title)+'</span></div><p class="ex-instr">'+esc(instr)+'</p><div class="ex-body"></div></div>');
+}
+
+function renderExercise(ex){
+  if(ex.type==="sequence") return buildSequenceExercise(ex);
+  if(ex.type==="match") return buildMatchExercise(ex);
+  if(ex.type==="choice") return buildChoiceExercise(ex);
+  if(ex.type==="multiselect") return buildMultiselectExercise(ex);
+  if(ex.type==="checklist") return buildChecklistExercise(ex);
+  return document.createTextNode("");
+}
+
+function buildSequenceExercise(ex){
+  var shell = exShell(ex.title, ex.instr);
+  var body = shell.querySelector(".ex-body");
+  var pool = shuffle(ex.items);
+  var answer = [];
+
+  var poolLabel = el('<div class="seq-label">Доступные шаги</div>');
+  var poolEl = el('<div class="seq-pool"></div>');
+  var ansLabel = el('<div class="seq-label">Ваш порядок</div>');
+  var ansEl = el('<div class="seq-answer"></div>');
+  var result = el('<div style="display:none;" class="ex-result"></div>');
+  var btnRow = el('<div class="btnrow"></div>');
+  var checkBtn = el('<button class="btn primary small">Проверить порядок</button>');
+  var resetBtn = el('<button class="btn secondary small">Сбросить</button>');
+  btnRow.appendChild(checkBtn); btnRow.appendChild(resetBtn);
+
+  function renderChips(){
+    poolEl.innerHTML = "";
+    pool.forEach(function(item){
+      var chip = el('<button type="button" class="seq-chip">'+esc(item.label)+'</button>');
+      chip.onclick = function(){
+        pool = pool.filter(function(it){ return it.id!==item.id; });
+        answer.push(item);
+        renderChips(); renderAnswer();
+      };
+      poolEl.appendChild(chip);
+    });
+  }
+  function renderAnswer(){
+    ansEl.innerHTML = "";
+    answer.forEach(function(item, idx){
+      var chip = el('<button type="button" class="seq-chip placed">'+(idx+1)+'. '+esc(item.label)+'</button>');
+      chip.onclick = function(){
+        answer = answer.filter(function(it){ return it.id!==item.id; });
+        pool.push(item);
+        renderChips(); renderAnswer();
+      };
+      ansEl.appendChild(chip);
+    });
+    result.style.display = "none";
+  }
+  checkBtn.onclick = function(){
+    if(answer.length !== ex.order.length){
+      result.style.display="block"; result.className="ex-result bad"; result.textContent="Сначала расставьте все элементы.";
+      return;
+    }
+    var ok = answer.every(function(item, idx){ return item.id===ex.order[idx]; });
+    ansEl.querySelectorAll(".seq-chip").forEach(function(chip, idx){
+      chip.classList.add(answer[idx].id===ex.order[idx] ? "ok" : "bad");
+    });
+    result.style.display="block";
+    result.className = "ex-result " + (ok?"good":"bad");
+    result.textContent = ok ? "Верно! Порядок собран правильно." : "Есть ошибки — неверные позиции подсвечены красным. Нажмите на них, чтобы переставить.";
+  };
+  resetBtn.onclick = function(){ pool = shuffle(ex.items); answer=[]; renderChips(); renderAnswer(); };
+
+  body.appendChild(poolLabel); body.appendChild(poolEl);
+  body.appendChild(ansLabel); body.appendChild(ansEl);
+  body.appendChild(btnRow); body.appendChild(result);
+  renderChips(); renderAnswer();
+  return shell;
+}
+
+function buildMatchExercise(ex){
+  var shell = exShell(ex.title, ex.instr);
+  var body = shell.querySelector(".ex-body");
+  var selects = {};
+  ex.rows.forEach(function(row){
+    var rowEl = el('<div class="match-row"><div class="lbl">'+esc(row.label)+'</div></div>');
+    var opts = shuffle(ex.options);
+    var sel = el('<select><option value="">— выберите —</option></select>');
+    opts.forEach(function(o){ sel.appendChild(el('<option value="'+esc(o)+'">'+esc(o)+'</option>')); });
+    var mark = el('<span class="match-mark"></span>');
+    rowEl.appendChild(sel); rowEl.appendChild(mark);
+    selects[row.id] = { select: sel, row: rowEl, mark: mark };
+    body.appendChild(rowEl);
+  });
+  var result = el('<div style="display:none;" class="ex-result"></div>');
+  var checkBtn = el('<button class="btn primary small">Проверить</button>');
+  var btnRow = el('<div class="btnrow"></div>'); btnRow.appendChild(checkBtn);
+  body.appendChild(btnRow); body.appendChild(result);
+
+  checkBtn.onclick = function(){
+    var right=0, total=ex.rows.length;
+    ex.rows.forEach(function(row){
+      var s = selects[row.id];
+      var v = s.select.value;
+      var isOk = v === ex.correct[row.id];
+      s.row.classList.remove("ok","bad");
+      s.row.classList.add(isOk?"ok":"bad");
+      s.mark.textContent = isOk ? "✓" : "✕";
+      if(isOk) right++;
+    });
+    result.style.display="block";
+    result.className = "ex-result " + (right===total?"good":"bad");
+    result.textContent = "Правильно: "+right+" из "+total+(right===total?" — отлично!":". Поправьте отмеченные строки и проверьте снова.");
+  };
+  return shell;
+}
+
+function buildChoiceExercise(ex){
+  var shell = exShell(ex.title, ex.instr);
+  var body = shell.querySelector(".ex-body");
+  ex.questions.forEach(function(q){
+    var card = el('<div class="choice-card"><div class="ctext">'+esc(q.text)+'</div><div class="choice-btns"></div><div class="choice-fb" style="display:none;"></div></div>');
+    var btns = card.querySelector(".choice-btns");
+    var fb = card.querySelector(".choice-fb");
+    var answered = false;
+    q.options.forEach(function(opt, idx){
+      var b = el('<button type="button" class="choice-btn">'+esc(opt)+'</button>');
+      b.onclick = function(){
+        if(answered) return;
+        answered = true;
+        Array.prototype.forEach.call(btns.children, function(bb, i){
+          if(i===q.correct) bb.classList.add("ok");
+          else if(i===idx) bb.classList.add("bad");
+        });
+        fb.style.display="block";
+        fb.textContent = (idx===q.correct ? "Верно. " : "Неверно. ") + (q.fb||"");
+      };
+      btns.appendChild(b);
+    });
+    body.appendChild(card);
+  });
+  return shell;
+}
+
+function buildMultiselectExercise(ex){
+  var shell = exShell(ex.title, ex.instr);
+  var body = shell.querySelector(".ex-body");
+  var boxes = {};
+  ex.options.forEach(function(o){
+    var row = el('<label class="ms-opt"><input type="checkbox"/><span>'+esc(o.label)+'</span></label>');
+    boxes[o.id] = { input: row.querySelector("input"), row: row, o:o };
+    body.appendChild(row);
+  });
+  var result = el('<div style="display:none;" class="ex-result"></div>');
+  var checkBtn = el('<button class="btn primary small">Проверить</button>');
+  var btnRow = el('<div class="btnrow"></div>'); btnRow.appendChild(checkBtn);
+  body.appendChild(btnRow); body.appendChild(result);
+  checkBtn.onclick = function(){
+    var allOk = true;
+    Object.keys(boxes).forEach(function(id){
+      var b = boxes[id];
+      var isOk = b.input.checked === b.o.correct;
+      b.row.classList.remove("ok","bad");
+      b.row.classList.add(isOk?"ok":"bad");
+      if(!isOk) allOk=false;
+    });
+    result.style.display="block";
+    result.className="ex-result "+(allOk?"good":"bad");
+    result.textContent = allOk ? "Верно! Отмечены все нужные документы и только они." : "Есть ошибки — неверные строки подсвечены.";
+  };
+  return shell;
+}
+
+function buildChecklistExercise(ex){
+  var shell = exShell(ex.title, ex.instr);
+  var body = shell.querySelector(".ex-body");
+  ex.items.forEach(function(text){
+    body.appendChild(el('<label class="chk-item"><input type="checkbox"/><span>'+esc(text)+'</span></label>'));
+  });
+  return shell;
+}
+
+// ---------------------------------------------------------------
+// QUIZ (tracked — result saved to the backend)
+// ---------------------------------------------------------------
+function buildQuizDom(m){
+  var wrap = el('<div></div>');
+  wrap.appendChild(el('<h3 style="margin:4px 0 0; color:var(--navy);">Тест: '+esc(m.title)+'</h3>'));
+
+  m.quiz.forEach(function(q, qi){
+    var qdiv = el('<div class="quiz-q"><div class="qtext">'+(qi+1)+'. '+esc(q.q)+'</div></div>');
+    q.opts.forEach(function(opt, oi){
+      var label = el('<label class="opt"><input type="radio" name="q'+qi+'" value="'+oi+'"/><span>'+esc(opt)+'</span></label>');
+      qdiv.appendChild(label);
+    });
+    wrap.appendChild(qdiv);
+  });
+
+  var btnRow = el('<div class="btnrow"></div>');
+  var submit = el('<button class="btn primary">Проверить ответы</button>');
+  var msg = el('<span class="note" style="align-self:center;"></span>');
+  btnRow.appendChild(submit); btnRow.appendChild(msg);
+  wrap.appendChild(btnRow);
+
+  submit.onclick = function(){
+    var answers = [];
+    var missing = false;
+    m.quiz.forEach(function(q, qi){
+      var checked = wrap.querySelector('input[name="q'+qi+'"]:checked');
+      if(!checked){ missing = true; answers.push(null); }
+      else answers.push(parseInt(checked.value,10));
+    });
+    if(missing){ msg.textContent = "Ответьте на все вопросы, прежде чем проверить."; return; }
+    msg.textContent = "";
+    gradeQuizInPlace(wrap, m, answers);
+  };
+
+  return wrap;
+}
+
+function gradeQuizInPlace(wrap, m, answers){
+  var score = 0;
+  var qDivs = wrap.querySelectorAll(".quiz-q");
+  m.quiz.forEach(function(q, qi){
+    if(answers[qi]===q.a) score++;
+    var opts = qDivs[qi].querySelectorAll(".opt");
+    opts.forEach(function(optEl, oi){
+      optEl.classList.add("disabled");
+      optEl.querySelector("input").disabled = true;
+      if(oi===q.a) optEl.classList.add("correct");
+      else if(oi===answers[qi]) optEl.classList.add("wrong");
+    });
+  });
+  var total = m.quiz.length;
+  var passed = score/total >= PASS_RATIO;
+  state.results[m.id] = { score:score, total:total, passed:passed, ts:Date.now() };
+  renderProgress();
+  renderTabs();
+  var badgeEl = document.getElementById("moduleBadge");
+  if(badgeEl) badgeEl.innerHTML = passed ? '<span class="badge pass">пройден · '+score+'/'+total+'</span>' : '<span class="badge fail">не сдан · '+score+'/'+total+'</span>';
+
+  wrap.querySelector(".btnrow").remove();
+  var box = el('<div class="score-box '+(passed?"pass":"fail")+'"><div class="big">'+score+' / '+total+'</div><div>'+(passed?"Тест пройден":"Нужно набрать минимум 4 из 5 — попробуйте снова")+'</div></div>');
+  wrap.appendChild(box);
+  if(!state.userName){
+    wrap.appendChild(el('<div class="idwarn" style="margin-top:8px;">Результат не попадёт в общий отчёт — укажите имя в поле наверху страницы.</div>'));
+  } else if(state.saveWarning){
+    wrap.appendChild(el('<div class="idwarn" style="margin-top:8px;">'+esc(state.saveWarning)+'</div>'));
+  }
+  var retry = el('<button class="btn secondary" style="margin-top:12px;">Пройти тест ещё раз</button>');
+  retry.onclick = function(){ render(); };
+  wrap.appendChild(retry);
+
+  persistResult(m.id, state.results[m.id]);
+}
+
+// ---------------------------------------------------------------
+// MAIN RENDER
+// ---------------------------------------------------------------
+function render(){
+  renderTabs();
+  renderProgress();
+  renderIdBar();
+  var main = document.getElementById("main");
+  main.innerHTML = "";
+  if(state.view==="overview") main.appendChild(renderOverview());
+  else if(state.view==="module") main.appendChild(renderModule());
+
+  var foot = document.getElementById("whoFoot");
+  foot.textContent = APPS_SCRIPT_URL.indexOf("PASTE_YOUR") === 0
+    ? "Центральный учёт результатов пока не подключен (см. инструкцию для администратора курса)"
+    : "Результаты тестов сохраняются в общую Google-таблицу курса";
+}
+
+// ---------------------------------------------------------------
+// ИДЕНТИФИКАЦИЯ (без логина)
+// Курс размещён на внешнем хостинге без LMS и без авторизации, поэтому
+// личность сотрудника — это пара значений в localStorage его браузера:
+// kzp_uid (случайный технический id) и kzp_name (имя, которое он один раз
+// вводит сам). Это позволяет вести сводный учёт в Google-таблице, но
+// значит, что прогресс не переносится между устройствами/браузерами —
+// это ограничение внешнего хостинга без логина, см. сопроводительное
+// письмо.
+// ---------------------------------------------------------------
+function uuidFallback(){
+  return "u"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,10);
+}
+function getOrCreateUid(){
+  try{
+    var id = localStorage.getItem("kzp_uid");
+    if(!id){
+      id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : uuidFallback();
+      localStorage.setItem("kzp_uid", id);
+    }
+    return id;
+  }catch(e){ return uuidFallback(); }
+}
+function getStoredName(){
+  try{ return localStorage.getItem("kzp_name") || ""; }catch(e){ return ""; }
+}
+function setStoredName(name){
+  try{ localStorage.setItem("kzp_name", name); }catch(e){}
+}
+
+function renderIdBar(){
+  var bar = document.getElementById("idBar");
+  if(!bar) return;
+  bar.innerHTML = "";
+  if(state.userName){
+    bar.appendChild(el('<div class="idsaved">Вы: '+esc(state.userName)+' <span>— результаты тестов сохраняются на это имя. '+
+      '<a href="#" id="idChange" style="color:var(--navy); text-decoration:underline;">изменить</a></span></div>'));
+    bar.querySelector("#idChange").onclick = function(ev){
+      ev.preventDefault();
+      state.userName = ""; setStoredName("");
+      renderIdBar();
+    };
+    return;
+  }
+  var row = el('<div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; width:100%;">'+
+    '<span class="idlabel">Укажите имя и фамилию — так результаты тестов попадут в общий отчёт:</span>'+
+    '<input type="text" id="nameInput" placeholder="Имя Фамилия" />'+
+    '<button class="btn primary small" id="nameSave">Сохранить</button>'+
+    '</div>');
+  bar.appendChild(row);
+  var input = row.querySelector("#nameInput");
+  var save = function(){
+    var v = (input.value||"").trim();
+    if(!v){ input.focus(); return; }
+    state.userName = v; setStoredName(v);
+    renderIdBar();
+    loadMyResults();
+  };
+  row.querySelector("#nameSave").onclick = save;
+  input.addEventListener("keydown", function(ev){ if(ev.key==="Enter") save(); });
+}
+
+// ---------------------------------------------------------------
+// БЭКЕНД: Google Таблица + Apps Script
+// persistResult/loadMyResults обращаются к веб-приложению Apps Script,
+// привязанному к Google-таблице курса (см. APPS_SCRIPT_URL выше и
+// инструкцию по развёртыванию). Запрос отправляется БЕЗ заголовка
+// Content-Type, чтобы браузер не делал предварительный OPTIONS-запрос
+// (preflight), который Apps Script не обрабатывает, — тело при этом
+// всё равно содержит JSON и разбирается как JSON на сервере.
+// Если сохранение не удалось (нет сети, скрипт не развёрнут и т.п.),
+// результат теста всё равно показывается локально — отправка просто
+// повторится при следующем действии пользователя.
+// ---------------------------------------------------------------
+function backendReady(){
+  return APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("PASTE_YOUR") !== 0;
+}
+
+function persistResult(moduleId, result){
+  if(!backendReady() || !state.userName || !state.userId) return;
+  state.saveWarning = "";
+  fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      userId: state.userId,
+      userName: state.userName,
+      moduleId: moduleId,
+      score: result.score,
+      total: result.total,
+      passed: !!result.passed
+    })
+  }).catch(function(){
+    state.saveWarning = "Результат сохранён локально, но не отправлен в общий отчёт (проверьте подключение к интернету).";
+  });
+}
+
+function loadMyResults(){
+  if(!backendReady() || !state.userId) return;
+  fetch(APPS_SCRIPT_URL+"?action=mydata&userId="+encodeURIComponent(state.userId))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.modules){ state.results = data.modules; render(); }
+    }).catch(function(){});
+}
+
+function init(){
+  state.userId = getOrCreateUid();
+  state.userName = getStoredName();
+  render();
+  if(state.userName) loadMyResults();
+}
+
+init();
+})();
+</script>
+</body>
+</html>
